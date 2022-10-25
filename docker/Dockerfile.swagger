@@ -1,5 +1,11 @@
 FROM swaggerapi/swagger-ui
 
-ENV SWAGGER_JSON="/schema.yml"
+ENV SWAGGER_JSON="/schema.yaml"
 
-COPY openapi-schema.yml /schema.yml
+COPY openapi-schema.yaml /schema.yaml
+
+
+# HTTP static content is exposed on port 8080
+# Example of usage:
+#
+# docker run -p 9000:8080 papermerge/swagger-ui:0.1.0
