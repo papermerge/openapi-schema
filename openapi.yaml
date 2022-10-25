@@ -1,0 +1,3916 @@
+openapi: 3.0.3
+info:
+  title: Papermerge REST API
+  version: 2.1.0b12
+  description: Document management system designed for digital archives
+paths:
+  /api/auth/login/:
+    post:
+      operationId: Login/Authenticate
+      description: |-
+        Authenticates user with given username and password.
+        Response will contain token to be used as part of ``Authorization`` header
+        in subsequent requests whenever authorization is required.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthToken'
+        required: true
+      security:
+      - Token Authentication: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthToken'
+          description: ''
+  /api/auth/logout/:
+    post:
+      operationId: Logout
+      description: |-
+        Logs the user out of current session.
+
+        On a successful request, the token used to authenticate is deleted from the
+        system and can no longer be used for authentication.
+
+        Request body must be empty.
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - vnd.api+json
+      tags:
+      - auth
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/logoutall/:
+    post:
+      operationId: Logout All
+      description: |-
+        Logs the user out of all sessions i.e. deletes all auth tokens for the user.
+
+        On a successful request, the token used to authenticate, and all other
+        tokens registered to the same user account, are deleted from the system
+        and can no longer be used for authentication.
+
+        Request body must be empty.
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - vnd.api+json
+      tags:
+      - auth
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          description: No response body
+  /api/document-versions/{id}/:
+    get:
+      operationId: document_versions_retrieve
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - vnd.api+json
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - document-versions
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/DocumentVersion'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentVersion'
+          description: ''
+  /api/document-versions/{id}/download/:
+    get:
+      operationId: document_versions_download_retrieve
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - vnd.api+json
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - document-versions
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          description: No response body
+  /api/documents/:
+    get:
+      operationId: documents_list
+      description: Document details endpoint.
+      parameters:
+      - name: filter[search]
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - name: page[number]
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page[size]
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: sort
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      tags:
+      - documents
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDocumentDetailsList'
+          description: ''
+  /api/documents/{document_id}/upload/{file_name}:
+    put:
+      operationId: Upload file
+      description: |-
+        Uploads a file for given document node. If last version of the
+        document does not have any file associated yet, this REST API call
+         will associated given file with document’s last version. If, on
+        the other hand, last version of the document already has a file
+        associated with it - a new document version will be created and
+        associated it with respective file.
+
+        Request body should contain file data. Please note that you need to
+        specify ``Content-Disposition`` header with value
+        'attachment; filename={file_name}'.
+      parameters:
+      - in: path
+        name: document_id
+        schema:
+          type: string
+          pattern: ^[0-9a-f-]+$
+        required: true
+      - in: path
+        name: file_name
+        schema:
+          type: string
+          pattern: ^[^/]+$
+        required: true
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - vnd.api+json
+      tags:
+      - documents
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          description: No response body
+  /api/documents/{id}/:
+    get:
+      operationId: documents_retrieve
+      description: Document details endpoint.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Document.
+        required: true
+      tags:
+      - documents
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/DocumentDetails'
+          description: ''
+    patch:
+      operationId: documents_partial_update
+      description: Document details endpoint.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Document.
+        required: true
+      tags:
+      - documents
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/PatchedDocumentDetails'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDocumentDetails'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDocumentDetails'
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/DocumentDetails'
+          description: ''
+    delete:
+      operationId: documents_destroy
+      description: Document details endpoint.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Document.
+        required: true
+      tags:
+      - documents
+      security:
+      - Token Authentication: []
+      responses:
+        '204':
+          description: No response body
+  /api/documents/{id}/ocr-text:
+    get:
+      operationId: Document OCR Text
+      description: |-
+        Retrieve OCRed text of the document
+
+        You can filter pages for which OCRed text is to be received either by
+        page numbers or by page ids. When both filters are empty - retrieve
+        OCRed text of the whole document (i.e. of its last document version)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: query
+        name: page_ids[]
+        schema:
+          type: array
+          items:
+            type: string
+        description: Filter pages by provided page ids
+      - in: query
+        name: page_numbers[]
+        schema:
+          type: array
+          items:
+            type: number
+        description: Filter pages by provided page numbers
+      tags:
+      - documents
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentVersionOcrText'
+          description: ''
+  /api/documents/merge/:
+    post:
+      operationId: Documents Merge
+      description: |-
+        Merge source document into destination
+
+        A new document version is created on the target (destination document)
+        from all pages of the last version of the source.
+        **Source document is deleted**.
+
+        Merge operation is useful when you have same document scanned several
+        times. Instead of keeping two similar scanned copies of the same
+        document, better to merge them as two versions of the same document.
+        For example, say you have two scans of the same document A_lq.pdf and
+        A_hq.pdf where A_lq.pdf low quality scan and A_hq.pdf is high quality
+        scan. You want to merge A_lq.pdf and A_hq.pdf document into one so
+        that higher quality scan will be lastest version.
+        In this case you need to set A_hq.pdf as source and A_lq.pdf as
+        destination.
+
+        Notice that OCR data (if any) is reused, this means that after
+        merge operation you don't have to re-run OCR as the OCR data of the
+        source document is reuse/copied to the target.
+      tags:
+      - documents
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentsMerge'
+        required: true
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentsMerge'
+          description: ''
+  /api/folders/:
+    get:
+      operationId: folders_list
+      description: Folders endpoint
+      parameters:
+      - name: filter[search]
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - name: page[number]
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page[size]
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: sort
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      tags:
+      - folders
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/PaginatedFolderList'
+          description: ''
+    post:
+      operationId: folders_create
+      description: Folders endpoint
+      tags:
+      - folders
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/Folder'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Folder'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Folder'
+      security:
+      - Token Authentication: []
+      responses:
+        '201':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/Folder'
+          description: ''
+  /api/folders/{id}/:
+    get:
+      operationId: folders_retrieve
+      description: Folders endpoint
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Folder.
+        required: true
+      tags:
+      - folders
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/Folder'
+          description: ''
+    patch:
+      operationId: folders_partial_update
+      description: Folders endpoint
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Folder.
+        required: true
+      tags:
+      - folders
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/PatchedFolder'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedFolder'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedFolder'
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/Folder'
+          description: ''
+    delete:
+      operationId: folders_destroy
+      description: Folders endpoint
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Folder.
+        required: true
+      tags:
+      - folders
+      security:
+      - Token Authentication: []
+      responses:
+        '204':
+          description: No response body
+  /api/groups/:
+    get:
+      operationId: groups_list
+      description: Group endpoint
+      parameters:
+      - name: filter[search]
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - name: page[number]
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page[size]
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: sort
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      tags:
+      - groups
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/PaginatedGroupList'
+          description: ''
+    post:
+      operationId: groups_create
+      description: Group endpoint
+      tags:
+      - groups
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/Group'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Group'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Group'
+      security:
+      - Token Authentication: []
+      responses:
+        '201':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/Group'
+          description: ''
+  /api/groups/{id}/:
+    get:
+      operationId: groups_retrieve
+      description: Group endpoint
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this group.
+        required: true
+      tags:
+      - groups
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/Group'
+          description: ''
+    patch:
+      operationId: groups_partial_update
+      description: Group endpoint
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this group.
+        required: true
+      tags:
+      - groups
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/PatchedGroup'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedGroup'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedGroup'
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/Group'
+          description: ''
+    delete:
+      operationId: groups_destroy
+      description: Group endpoint
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this group.
+        required: true
+      tags:
+      - groups
+      security:
+      - Token Authentication: []
+      responses:
+        '204':
+          description: No response body
+  /api/nodes/:
+    get:
+      operationId: nodes_list
+      description: |-
+        Documents can be organized in folders. One folder can contain documents as
+        well as other folders. A node is a convinient abstraction of two concepts -
+        'folder' and 'document'. Each node has a type field with value either
+        'folders' or 'documents' depending on what kind of node it is.
+      parameters:
+      - name: filter[search]
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - name: page[number]
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page[size]
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: sort
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      tags:
+      - nodes
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/PaginatedNodeList'
+          description: ''
+    post:
+      operationId: nodes_create
+      description: |-
+        Creates a node.
+
+        A node can be either a Folder or a Document. In order to create
+        a folder set required `type` attribute to `folders`. In order
+        to create a document set `type` attribute to `documents`.
+
+        Created document won't have any file associated i.e. this REST API
+        creates just document model in database.
+      tags:
+      - nodes
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/Node'
+      security:
+      - Token Authentication: []
+      responses:
+        '201':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/Node'
+          description: ''
+  /api/nodes/{id}/:
+    get:
+      operationId: Retrieve Node
+      description: |-
+        Documents can be organized in folders. One folder can contain documents as
+        well as other folders. A node is a convinient abstraction of two concepts -
+        'folder' and 'document'. Each node has a type field with value either
+        'folders' or 'documents' depending on what kind of node it is.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Documents.
+        required: true
+      tags:
+      - nodes
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/Node'
+          description: ''
+    patch:
+      operationId: nodes_partial_update
+      description: |-
+        Documents can be organized in folders. One folder can contain documents as
+        well as other folders. A node is a convinient abstraction of two concepts -
+        'folder' and 'document'. Each node has a type field with value either
+        'folders' or 'documents' depending on what kind of node it is.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Documents.
+        required: true
+      tags:
+      - nodes
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/PatchedNode'
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/Node'
+          description: ''
+    delete:
+      operationId: nodes_destroy
+      description: |-
+        Documents can be organized in folders. One folder can contain documents as
+        well as other folders. A node is a convinient abstraction of two concepts -
+        'folder' and 'document'. Each node has a type field with value either
+        'folders' or 'documents' depending on what kind of node it is.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Documents.
+        required: true
+      tags:
+      - nodes
+      security:
+      - Token Authentication: []
+      responses:
+        '204':
+          description: No response body
+  /api/nodes/{id}/tags/:
+    post:
+      operationId: node_assign_tags
+      description: |-
+        Assigns given list of tag names to the node.
+
+        All tags not present in given list of tags names
+        will be disassociated from the node; in other words upon
+        successful completion of the request node will have ONLY
+        tags from the list.
+        Yet another way of thinking about http POST is as it **replaces
+        existing node tags** with the one from input list.
+
+        Example:
+
+            Node N1 has 'invoice', 'important', 'unpaid' tags.
+
+            After following request:
+
+                POST /api/nodes/{N1}/tags/
+                {tags: ['invoice', 'important', 'paid']}
+
+            Node N1 will have 'invoice', 'important', 'paid' tags.
+            Notice that previously associated 'unpaid' tag is not
+            assigned to N1 anymore (because it was not in the provided list
+            of tags).
+
+        If you want to retain node tags not present in input tag list names
+        then use PATCH/PUT http method of this endpoint.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - nodes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NodeTags'
+        required: true
+      security:
+      - Token Authentication: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeTags'
+          description: ''
+    patch:
+      operationId: node_append_tags
+      description: |-
+        Appends given list of tag names to the node.
+
+        Retains all previously associated node tags.
+        Yet another way of thinking about http PATCH method is as it
+        **appends** input tags to the currently associated tags.
+
+        Example:
+
+            Node N1 has 'invoice', 'important' tags.
+
+            After following request:
+
+                POST /api/nodes/{N1}/tags/
+                {tags: ['paid']}
+
+            Node N1 will have 'invoice', 'important', 'paid' tags.
+            Notice that previously associated 'invoice' and 'important' tags
+            are still assigned to N1.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - nodes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedNodeTags'
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeTags'
+          description: ''
+    delete:
+      operationId: node_dissociate_tags
+      description: |-
+        Dissociate given tags the node.
+
+        Tags models are not deleted - just dissociated from the node.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - nodes
+      security:
+      - Token Authentication: []
+      responses:
+        '204':
+          description: No response body
+  /api/nodes/download/:
+    get:
+      operationId: nodes_download_retrieve
+      description: |-
+        Expects one or multiple of following HTTP GET parameters:
+        * node_ids (required) - a list of node IDs to download
+        * file_name - preferred file name for downloaded archive/document file
+        * include_version = 'only_last' or 'only_original'
+            In case when include_version == 'only_last', downloaded
+            archive/document file(s) will contain only last version
+            of the document
+            Respectively for include_version == 'only_original' downloaded
+            archive/document file(s) will contain only orignial version
+            of the document
+            Default value is 'only_last'
+        * archive_type = 'zip' or 'targz'
+            Applies only if there is more than one node to download.
+            Decides on type of archive to create.
+            Default value is 'zip'
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - vnd.api+json
+      tags:
+      - nodes
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/NodesDownload'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodesDownload'
+          description: ''
+  /api/nodes/inboxcount/:
+    get:
+      operationId: nodes_inboxcount_retrieve
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - vnd.api+json
+      tags:
+      - nodes
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/InboxCount'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InboxCount'
+          description: ''
+  /api/nodes/move/:
+    post:
+      operationId: nodes_move_create
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - vnd.api+json
+      tags:
+      - nodes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NodeMove'
+        required: true
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/NodeMove'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeMove'
+          description: ''
+  /api/ocr/:
+    post:
+      operationId: ocr_create
+      description: Starts OCR for document version
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - vnd.api+json
+      tags:
+      - ocr
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/Ocr'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Ocr'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Ocr'
+        required: true
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/Ocr'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ocr'
+          description: ''
+  /api/pages/:
+    delete:
+      operationId: Multiple pages delete
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - vnd.api+json
+      tags:
+      - pages
+      security:
+      - Token Authentication: []
+      responses:
+        '204':
+          description: No response body
+  /api/pages/{id}/:
+    get:
+      operationId: Retrieve
+      description: Retrieves page resource
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - jpeg
+          - svg
+          - txt
+          - vnd.api+json
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - pages
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Page'
+            image/svg+xml:
+              schema:
+                $ref: '#/components/schemas/Page'
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/Page'
+            image/jpeg:
+              schema:
+                $ref: '#/components/schemas/Page'
+          description: ''
+    delete:
+      operationId: Single page delete
+      description: Deletes page resource
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - jpeg
+          - svg
+          - txt
+          - vnd.api+json
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - pages
+      security:
+      - Token Authentication: []
+      responses:
+        '204':
+          description: No response body
+  /api/pages/move-to-document/:
+    post:
+      operationId: Move to document
+      description: |-
+        Moves one or multiple pages from source document to target document.
+
+        Both source and target documents' version will be incremented
+        by one.
+      tags:
+      - pages
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/PagesMoveToDocument'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PagesMoveToDocument'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PagesMoveToDocument'
+        required: true
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/PagesMoveToDocument'
+          description: ''
+  /api/pages/move-to-folder/:
+    post:
+      operationId: Move to folder
+      description: |-
+        Moves/extracts one or multiple pages into target folder.
+
+        This operation will create new one or multiple documents (depending
+        on ``single_page`` parameter) and place then into target folder.
+        ``single_page`` parameter is boolean value which controls whether all
+        extracted pages will be placed inside one single document or each
+        individual page will be placed into newly created single page document.
+      tags:
+      - pages
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/PagesMoveToFolder'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PagesMoveToFolder'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PagesMoveToFolder'
+        required: true
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/PagesMoveToFolder'
+          description: ''
+  /api/pages/reorder/:
+    post:
+      operationId: Reorder
+      description: Reorders pages within document.
+      tags:
+      - pages
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PagesReorder'
+        required: true
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/PagesReorder'
+          description: ''
+  /api/pages/rotate/:
+    post:
+      operationId: Rotate
+      description: Rortates one or multiple pages with given angle.
+      tags:
+      - pages
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PagesRotate'
+        required: true
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/PagesRotate'
+          description: ''
+  /api/permissions/:
+    get:
+      operationId: permissions_list
+      description: |-
+        Retrieves (almost) ALL permissions available in the system.
+
+        It is useful to be able to retrieve (almost) ALL permission resource
+        objects available - for example when creating a new Role you need to
+        know what permissions are available and then select couple of available
+        permissions and associate them to the newly create Role.
+
+        Some permissions available will never be returned by this endpoint
+        (hence "almost all").
+        For example permissions for internally used 'BaseTreeNode' model.
+        User is not aware what is 'BaseTreeNode' and getting permission
+        for that will only confuse him/her. Permissions used to grant access
+        per node/object are not returned either.
+
+        In order to access this endpoint
+        you need **view_permission** permission.
+
+        Don't confuse this endpoint with "user permissions", which is intended,
+        as name suggests, to return only user specific permissions.
+        In order to retrieve current user permissions use
+        /api/users/me/ endpoint.
+      parameters:
+      - name: filter[search]
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - name: sort
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      tags:
+      - permissions
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Permission'
+          description: ''
+  /api/preferences/:
+    get:
+      operationId: preferences_list
+      description: |-
+        - list preferences
+        - detail given preference
+        - batch update preferences
+        - update a single preference
+      parameters:
+      - name: filter[search]
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - vnd.api+json
+      - name: page[number]
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page[size]
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: sort
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      tags:
+      - preferences
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCustomUserPreferenceList'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCustomUserPreferenceList'
+          description: ''
+  /api/preferences/{id}/:
+    get:
+      operationId: preferences_retrieve
+      description: |-
+        - list preferences
+        - detail given preference
+        - batch update preferences
+        - update a single preference
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - vnd.api+json
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this user preference.
+        required: true
+      tags:
+      - preferences
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/CustomUserPreference'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomUserPreference'
+          description: ''
+    put:
+      operationId: preferences_update
+      description: |-
+        - list preferences
+        - detail given preference
+        - batch update preferences
+        - update a single preference
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - vnd.api+json
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this user preference.
+        required: true
+      tags:
+      - preferences
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/CustomUserPreference'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomUserPreference'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CustomUserPreference'
+        required: true
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/CustomUserPreference'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomUserPreference'
+          description: ''
+    patch:
+      operationId: preferences_partial_update
+      description: |-
+        - list preferences
+        - detail given preference
+        - batch update preferences
+        - update a single preference
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - vnd.api+json
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this user preference.
+        required: true
+      tags:
+      - preferences
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/PatchedCustomUserPreference'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCustomUserPreference'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCustomUserPreference'
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/CustomUserPreference'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomUserPreference'
+          description: ''
+  /api/preferences/bulk/:
+    post:
+      operationId: preferences_bulk_create
+      description: |-
+        Update multiple preferences at once
+
+        this is a long method because we ensure everything is valid
+        before actually persisting the changes
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - vnd.api+json
+      tags:
+      - preferences
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/CustomUserPreference'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomUserPreference'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CustomUserPreference'
+        required: true
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/CustomUserPreference'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomUserPreference'
+          description: ''
+  /api/schema/:
+    get:
+      operationId: schema_retrieve
+      description: |-
+        OpenApi3 schema for this API. Format can be selected via content negotiation.
+
+        - YAML: application/vnd.oai.openapi
+        - JSON: application/vnd.oai.openapi+json
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - yaml
+      - in: query
+        name: lang
+        schema:
+          type: string
+          enum:
+          - de
+          - en
+          - fr
+      tags:
+      - schema
+      security:
+      - Token Authentication: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/vnd.oai.openapi:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/yaml:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/vnd.oai.openapi+json:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/search/:
+    get:
+      operationId: Search
+      description: |-
+        Performs full text search on the documents and folders.
+
+        Folders are matched by their title and assigned tags.
+        Documents are matched by title, OCRed text and assigned tags.
+      parameters:
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: text to search
+        required: true
+      - in: query
+        name: tags
+        schema:
+          type: string
+        description: "\n                Comma delimited tags that should be assigned\
+          \ the node.\n                By default uses `all` operator i.e. all tags\
+          \ listed\n                here should be assgned to the node. For `any`\
+          \ operator\n                use `tags_ap=any`\n                "
+      - in: query
+        name: tags_op
+        schema:
+          type: string
+        description: "\n                Operator to use when searching by tag. Can\
+          \ be either\n                `any` or `all`.\n                Default value\
+          \ is `all`.\n                For `any` - will return nodes with at least\
+          \ one of\n                    the tags assigned.\n                For `all`\
+          \ - will return only nodes with all of the\n                tags assigned.\n\
+          \                "
+      tags:
+      - search
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResult'
+          description: ''
+  /api/tags/:
+    get:
+      operationId: tags_list
+      description: |-
+        This mixin provides a helper attributes to select or prefetch related models
+        based on the include specified in the URL.
+
+        __all__ can be used to specify a prefetch which should be done regardless of the include
+
+
+        .. code:: python
+
+            # When MyViewSet is called with ?include=author it will prefetch author and authorbio
+            class MyViewSet(viewsets.ModelViewSet):
+                queryset = Book.objects.all()
+                prefetch_for_includes = {
+                    '__all__': [],
+                    'category.section': ['category']
+                }
+                select_for_includes = {
+                    '__all__': [],
+                    'author': ['author', 'author__authorbio'],
+                }
+      parameters:
+      - name: filter[search]
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - vnd.api+json
+      - name: page[number]
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page[size]
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: sort
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      tags:
+      - tags
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTagList'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTagList'
+          description: ''
+    post:
+      operationId: tags_create
+      description: |-
+        This mixin provides a helper attributes to select or prefetch related models
+        based on the include specified in the URL.
+
+        __all__ can be used to specify a prefetch which should be done regardless of the include
+
+
+        .. code:: python
+
+            # When MyViewSet is called with ?include=author it will prefetch author and authorbio
+            class MyViewSet(viewsets.ModelViewSet):
+                queryset = Book.objects.all()
+                prefetch_for_includes = {
+                    '__all__': [],
+                    'category.section': ['category']
+                }
+                select_for_includes = {
+                    '__all__': [],
+                    'author': ['author', 'author__authorbio'],
+                }
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - vnd.api+json
+      tags:
+      - tags
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/Tag'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Tag'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Tag'
+      security:
+      - Token Authentication: []
+      responses:
+        '201':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+          description: ''
+  /api/tags/{id}/:
+    get:
+      operationId: tags_retrieve
+      description: |-
+        This mixin provides a helper attributes to select or prefetch related models
+        based on the include specified in the URL.
+
+        __all__ can be used to specify a prefetch which should be done regardless of the include
+
+
+        .. code:: python
+
+            # When MyViewSet is called with ?include=author it will prefetch author and authorbio
+            class MyViewSet(viewsets.ModelViewSet):
+                queryset = Book.objects.all()
+                prefetch_for_includes = {
+                    '__all__': [],
+                    'category.section': ['category']
+                }
+                select_for_includes = {
+                    '__all__': [],
+                    'author': ['author', 'author__authorbio'],
+                }
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - vnd.api+json
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - tags
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+          description: ''
+    patch:
+      operationId: tags_partial_update
+      description: |-
+        This mixin provides a helper attributes to select or prefetch related models
+        based on the include specified in the URL.
+
+        __all__ can be used to specify a prefetch which should be done regardless of the include
+
+
+        .. code:: python
+
+            # When MyViewSet is called with ?include=author it will prefetch author and authorbio
+            class MyViewSet(viewsets.ModelViewSet):
+                queryset = Book.objects.all()
+                prefetch_for_includes = {
+                    '__all__': [],
+                    'category.section': ['category']
+                }
+                select_for_includes = {
+                    '__all__': [],
+                    'author': ['author', 'author__authorbio'],
+                }
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - vnd.api+json
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - tags
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/PatchedTag'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTag'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTag'
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+          description: ''
+    delete:
+      operationId: tags_destroy
+      description: |-
+        This mixin provides a helper attributes to select or prefetch related models
+        based on the include specified in the URL.
+
+        __all__ can be used to specify a prefetch which should be done regardless of the include
+
+
+        .. code:: python
+
+            # When MyViewSet is called with ?include=author it will prefetch author and authorbio
+            class MyViewSet(viewsets.ModelViewSet):
+                queryset = Book.objects.all()
+                prefetch_for_includes = {
+                    '__all__': [],
+                    'category.section': ['category']
+                }
+                select_for_includes = {
+                    '__all__': [],
+                    'author': ['author', 'author__authorbio'],
+                }
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - vnd.api+json
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - tags
+      security:
+      - Token Authentication: []
+      responses:
+        '204':
+          description: No response body
+  /api/tokens/:
+    get:
+      operationId: tokens_list
+      description: |-
+        Each user can have multiple authentication tokens. The reason to have
+        multiple tokens per user is that he (or she) may consume REST API from
+        multiple clients (or devices) using one single user account.
+        User may then use a separate authentication token per each device or client.
+      parameters:
+      - name: filter[search]
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - name: page[number]
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page[size]
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: sort
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      tags:
+      - tokens
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTokenList'
+          description: ''
+    post:
+      operationId: tokens_create
+      description: |-
+        Each user can have multiple authentication tokens. The reason to have
+        multiple tokens per user is that he (or she) may consume REST API from
+        multiple clients (or devices) using one single user account.
+        User may then use a separate authentication token per each device or client.
+      tags:
+      - tokens
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/Token'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Token'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Token'
+      security:
+      - Token Authentication: []
+      responses:
+        '201':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/Token'
+          description: ''
+  /api/tokens/{digest}/:
+    get:
+      operationId: tokens_retrieve
+      description: |-
+        Each user can have multiple authentication tokens. The reason to have
+        multiple tokens per user is that he (or she) may consume REST API from
+        multiple clients (or devices) using one single user account.
+        User may then use a separate authentication token per each device or client.
+      parameters:
+      - in: path
+        name: digest
+        schema:
+          type: string
+        description: A unique value identifying this auth token.
+        required: true
+      tags:
+      - tokens
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/Token'
+          description: ''
+    delete:
+      operationId: tokens_destroy
+      description: |-
+        Each user can have multiple authentication tokens. The reason to have
+        multiple tokens per user is that he (or she) may consume REST API from
+        multiple clients (or devices) using one single user account.
+        User may then use a separate authentication token per each device or client.
+      parameters:
+      - in: path
+        name: digest
+        schema:
+          type: string
+        description: A unique value identifying this auth token.
+        required: true
+      tags:
+      - tokens
+      security:
+      - Token Authentication: []
+      responses:
+        '204':
+          description: No response body
+  /api/users/:
+    get:
+      operationId: users_list
+      description: Users endpoint
+      parameters:
+      - name: filter[search]
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - name: page[number]
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page[size]
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: sort
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      tags:
+      - users
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUserList'
+          description: ''
+    post:
+      operationId: users_create
+      description: Users endpoint
+      tags:
+      - users
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/User'
+      security:
+      - Token Authentication: []
+      responses:
+        '201':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/users/{id}/:
+    get:
+      operationId: users_retrieve
+      description: Users endpoint
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this user.
+        required: true
+      tags:
+      - users
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    patch:
+      operationId: users_partial_update
+      description: Users endpoint
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this user.
+        required: true
+      tags:
+      - users
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    delete:
+      operationId: users_destroy
+      description: Users endpoint
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this user.
+        required: true
+      tags:
+      - users
+      security:
+      - Token Authentication: []
+      responses:
+        '204':
+          description: No response body
+  /api/users/{id}/change-password/:
+    post:
+      operationId: users_change_password_create
+      description: Change password of the user identified with UUID/pk in the URL
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Password'
+        required: true
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Password'
+          description: ''
+  /api/users/me/:
+    get:
+      operationId: users_me_retrieve
+      description: |-
+        Retrieves current user details.
+
+        Detailed information includes, among others, information about home
+        folder, inbox folder and permission of the current user.
+
+        Note that this endpoint returns user permissions i.e. what actions
+        current user is authorized to perform.
+      tags:
+      - users
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/version/:
+    get:
+      operationId: version_retrieve
+      description: Retrieves papermerge core module version
+      tags:
+      - version
+      security:
+      - Token Authentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Version'
+          description: ''
+components:
+  parameters:
+    fields:
+      name: fields
+      in: query
+      description: |-
+        [sparse fieldsets](https://jsonapi.org/format/#fetching-sparse-fieldsets).
+        Use fields[\<typename\>]=field1,field2,...,fieldN
+      required: false
+      style: deepObject
+      schema:
+        type: object
+      explode: true
+    include:
+      name: include
+      in: query
+      description: '[list of included related resources](https://jsonapi.org/format/#fetching-includes)'
+      required: false
+      style: form
+      schema:
+        type: string
+    sort:
+      name: sort
+      in: query
+      description: '[list of fields to sort by](https://jsonapi.org/format/#fetching-sorting)'
+      required: false
+      style: form
+      schema:
+        type: string
+  schemas:
+    ArchiveTypeEnum:
+      enum:
+      - targz
+      - zip
+      type: string
+    AuthToken:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+        token:
+          type: string
+          readOnly: true
+      required:
+      - password
+      - token
+      - username
+    CustomUserPreference:
+      type: object
+      properties:
+        section:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        identifier:
+          type: string
+          readOnly: true
+        default:
+          type: string
+          readOnly: true
+        value:
+          type: string
+        verbose_name:
+          type: string
+          readOnly: true
+        help_text:
+          type: string
+          readOnly: true
+        additional_data:
+          type: string
+          readOnly: true
+        field:
+          type: string
+          readOnly: true
+        id:
+          type: string
+          readOnly: true
+      required:
+      - additional_data
+      - default
+      - field
+      - help_text
+      - id
+      - identifier
+      - name
+      - section
+      - value
+      - verbose_name
+    DocumentDetails:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - documents
+            id:
+              type: string
+              format: uuid
+            attributes:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                title:
+                  type: string
+                  maxLength: 200
+                lang:
+                  type: string
+                  title: Language
+                  maxLength: 8
+                file_name:
+                  type: string
+                ocr:
+                  type: boolean
+                ocr_status:
+                  enum:
+                  - unknown
+                  - received
+                  - started
+                  - succeeded
+                  - failed
+                  type: string
+                versions:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/DocumentVersion'
+                  readOnly: true
+                size:
+                  type: integer
+                page_count:
+                  type: integer
+                created_at:
+                  type: string
+                  format: date-time
+                  readOnly: true
+                updated_at:
+                  type: string
+                  format: date-time
+                  readOnly: true
+              required:
+              - title
+            relationships:
+              type: object
+              properties:
+                parent:
+                  $ref: '#/components/schemas/reltoone'
+    DocumentVersion:
+      type: object
+      description: |-
+        A `ModelSerializer` is just a regular `Serializer`, except that:
+
+        * A set of default fields are automatically populated.
+        * A set of default validators are automatically populated.
+        * Default `.create()` and `.update()` implementations are provided.
+
+        The process of automatically determining a set of serializer fields
+        based on the model fields is reasonably complex, but you almost certainly
+        don't need to dig into the implementation.
+
+        If the `ModelSerializer` class *doesn't* generate the set of fields that
+        you need you should either declare the extra/differing fields explicitly on
+        the serializer class, or simply use a `Serializer` class.
+
+
+        Included Mixins:
+
+        * A mixin class to enable sparse fieldsets is included
+        * A mixin class to enable validation of included resources is included
+      properties:
+        id:
+          type: string
+          format: uuid
+        number:
+          type: integer
+          title: Version number
+        lang:
+          type: string
+          title: Language
+          maxLength: 8
+        file_name:
+          type: string
+          nullable: true
+          maxLength: 1024
+        pages:
+          type: array
+          items:
+            type: string
+            format: uuid
+        size:
+          type: integer
+          description: Size of file_orig attached. Size is in Bytes
+        page_count:
+          type: integer
+        short_description:
+          type: string
+          maxLength: 128
+        document:
+          type: string
+          format: uuid
+        download_url:
+          type: string
+          readOnly: true
+      required:
+      - document
+      - download_url
+      - pages
+    DocumentVersionOcrText:
+      type: object
+      description: Returns OCRed Text of the document
+      properties:
+        text:
+          type: string
+    DocumentsMerge:
+      type: object
+      description: |-
+        A `Serializer` is a model-less serializer class with additional
+        support for JSON:API spec features.
+
+        As in JSON:API specification a type is always required you need to
+        make sure that you define `resource_name` in your `Meta` class
+        when deriving from this class.
+
+        Included Mixins:
+
+        * A mixin class to enable sparse fieldsets is included
+        * A mixin class to enable validation of included resources is included
+      properties:
+        src:
+          type: string
+          format: uuid
+        dst:
+          type: string
+          format: uuid
+      required:
+      - dst
+      - src
+    Folder:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - folders
+            id:
+              type: string
+              format: uuid
+            attributes:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                title:
+                  type: string
+                  maxLength: 200
+                tags:
+                  type: string
+                created_at:
+                  type: string
+                  format: date-time
+                  readOnly: true
+                updated_at:
+                  type: string
+                  format: date-time
+                  readOnly: true
+              required:
+              - title
+            relationships:
+              type: object
+              properties:
+                parent:
+                  $ref: '#/components/schemas/reltoone'
+    Group:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - groups
+            id:
+              type: string
+              format: uuid
+            attributes:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  readOnly: true
+                name:
+                  type: string
+                  maxLength: 150
+              required:
+              - name
+            relationships:
+              type: object
+              properties:
+                permissions:
+                  $ref: '#/components/schemas/reltomany'
+    InboxCount:
+      type: object
+      properties:
+        count:
+          type: integer
+      required:
+      - count
+    IncludeVersionEnum:
+      enum:
+      - only_original
+      - only_last
+      type: string
+    Node:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - documents
+              - folders
+            id:
+              type: string
+              format: uuid
+            attributes:
+              type: object
+              properties:
+                title:
+                  type: string
+                  maxLength: 200
+                created_at:
+                  type: string
+                  format: date-time
+                  readOnly: true
+                updated_at:
+                  type: string
+                  format: date-time
+                  readOnly: true
+              required:
+              - title
+            relationships:
+              type: object
+              properties:
+                parent:
+                  $ref: '#/components/schemas/reltoone'
+    NodeID:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+      required:
+      - id
+    NodeMove:
+      type: object
+      properties:
+        target_parent:
+          $ref: '#/components/schemas/NodeID'
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/NodeID'
+      required:
+      - nodes
+      - target_parent
+    NodeTags:
+      type: object
+      properties:
+        tags:
+          type: array
+          items:
+            type: string
+      required:
+      - tags
+    NodeTypeEnum:
+      enum:
+      - document
+      - folder
+      type: string
+    NodesDownload:
+      type: object
+      properties:
+        node_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        file_name:
+          type: string
+          maxLength: 32
+        include_version:
+          allOf:
+          - $ref: '#/components/schemas/IncludeVersionEnum'
+          default: only_last
+        archive_type:
+          allOf:
+          - $ref: '#/components/schemas/ArchiveTypeEnum'
+          default: zip
+      required:
+      - node_ids
+    Ocr:
+      type: object
+      properties:
+        id:
+          type: string
+          title: Doc id
+          maxLength: 32
+        lang:
+          type: string
+      required:
+      - id
+      - lang
+    Page:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - pages
+            id:
+              type: string
+              format: uuid
+            attributes:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                number:
+                  type: integer
+                text:
+                  type: string
+                lang:
+                  type: string
+                  maxLength: 8
+                svg_url:
+                  type: string
+                  readOnly: true
+                jpg_url:
+                  type: string
+                  readOnly: true
+            relationships:
+              type: object
+              properties:
+                document_version:
+                  $ref: '#/components/schemas/reltoone'
+    PageReorder:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        old_number:
+          type: integer
+          description: Page position within the document before  page's order change.Position
+            numbering starts with 1.
+        new_number:
+          type: integer
+          description: Desired new page position within the document. Position numbering
+            starts with 1.
+      required:
+      - id
+      - new_number
+      - old_number
+    PageRotate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        angle:
+          type: integer
+      required:
+      - angle
+      - id
+    PagesMoveToDocument:
+      type: object
+      properties:
+        pages:
+          type: array
+          items:
+            type: string
+            format: uuid
+        dst:
+          type: string
+          format: uuid
+        merge:
+          type: boolean
+          default: false
+        position:
+          type: integer
+          default: -1
+      required:
+      - dst
+      - pages
+    PagesMoveToFolder:
+      type: object
+      properties:
+        pages:
+          type: array
+          items:
+            type: string
+            format: uuid
+        dst:
+          type: string
+          format: uuid
+        single_page:
+          type: boolean
+          default: false
+        title_format:
+          type: string
+          maxLength: 32
+      required:
+      - dst
+      - pages
+    PagesReorder:
+      type: object
+      properties:
+        pages:
+          type: array
+          items:
+            $ref: '#/components/schemas/PageReorder'
+      required:
+      - pages
+    PagesRotate:
+      type: object
+      properties:
+        pages:
+          type: array
+          items:
+            $ref: '#/components/schemas/PageRotate'
+      required:
+      - pages
+    PaginatedCustomUserPreferenceList:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomUserPreference'
+        meta:
+          type: object
+          properties:
+            pagination:
+              type: object
+              properties:
+                page:
+                  type: integer
+                  example: 1
+                pages:
+                  type: integer
+                  example: 10
+                count:
+                  type: integer
+                  example: 100
+        links:
+          type: object
+          properties:
+            next:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=4
+            prev:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=2
+            first:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=2
+            last:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=2
+    PaginatedDocumentDetailsList:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentDetails'
+        meta:
+          type: object
+          properties:
+            pagination:
+              type: object
+              properties:
+                page:
+                  type: integer
+                  example: 1
+                pages:
+                  type: integer
+                  example: 10
+                count:
+                  type: integer
+                  example: 100
+        links:
+          type: object
+          properties:
+            next:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=4
+            prev:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=2
+            first:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=2
+            last:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=2
+    PaginatedFolderList:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Folder'
+        meta:
+          type: object
+          properties:
+            pagination:
+              type: object
+              properties:
+                page:
+                  type: integer
+                  example: 1
+                pages:
+                  type: integer
+                  example: 10
+                count:
+                  type: integer
+                  example: 100
+        links:
+          type: object
+          properties:
+            next:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=4
+            prev:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=2
+            first:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=2
+            last:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=2
+    PaginatedGroupList:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+        meta:
+          type: object
+          properties:
+            pagination:
+              type: object
+              properties:
+                page:
+                  type: integer
+                  example: 1
+                pages:
+                  type: integer
+                  example: 10
+                count:
+                  type: integer
+                  example: 100
+        links:
+          type: object
+          properties:
+            next:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=4
+            prev:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=2
+            first:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=2
+            last:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=2
+    PaginatedNodeList:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Node'
+        meta:
+          type: object
+          properties:
+            pagination:
+              type: object
+              properties:
+                page:
+                  type: integer
+                  example: 1
+                pages:
+                  type: integer
+                  example: 10
+                count:
+                  type: integer
+                  example: 100
+        links:
+          type: object
+          properties:
+            next:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=4
+            prev:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=2
+            first:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=2
+            last:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=2
+    PaginatedTagList:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+        meta:
+          type: object
+          properties:
+            pagination:
+              type: object
+              properties:
+                page:
+                  type: integer
+                  example: 1
+                pages:
+                  type: integer
+                  example: 10
+                count:
+                  type: integer
+                  example: 100
+        links:
+          type: object
+          properties:
+            next:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=4
+            prev:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=2
+            first:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=2
+            last:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=2
+    PaginatedTokenList:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Token'
+        meta:
+          type: object
+          properties:
+            pagination:
+              type: object
+              properties:
+                page:
+                  type: integer
+                  example: 1
+                pages:
+                  type: integer
+                  example: 10
+                count:
+                  type: integer
+                  example: 100
+        links:
+          type: object
+          properties:
+            next:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=4
+            prev:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=2
+            first:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=2
+            last:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=2
+    PaginatedUserList:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        meta:
+          type: object
+          properties:
+            pagination:
+              type: object
+              properties:
+                page:
+                  type: integer
+                  example: 1
+                pages:
+                  type: integer
+                  example: 10
+                count:
+                  type: integer
+                  example: 100
+        links:
+          type: object
+          properties:
+            next:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=4
+            prev:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=2
+            first:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=2
+            last:
+              type: string
+              nullable: true
+              format: uri
+              example: http://api.example.org/accounts/?page[number]=2
+    Password:
+      type: object
+      properties:
+        password:
+          type: string
+          maxLength: 200
+      required:
+      - password
+    PatchedCustomUserPreference:
+      type: object
+      properties:
+        section:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        identifier:
+          type: string
+          readOnly: true
+        default:
+          type: string
+          readOnly: true
+        value:
+          type: string
+        verbose_name:
+          type: string
+          readOnly: true
+        help_text:
+          type: string
+          readOnly: true
+        additional_data:
+          type: string
+          readOnly: true
+        field:
+          type: string
+          readOnly: true
+        id:
+          type: string
+          readOnly: true
+    PatchedDocumentDetails:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - documents
+            id:
+              type: string
+              format: uuid
+            attributes:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                title:
+                  type: string
+                  maxLength: 200
+                lang:
+                  type: string
+                  title: Language
+                  maxLength: 8
+                file_name:
+                  type: string
+                ocr:
+                  type: boolean
+                ocr_status:
+                  enum:
+                  - unknown
+                  - received
+                  - started
+                  - succeeded
+                  - failed
+                  type: string
+                versions:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/DocumentVersion'
+                  readOnly: true
+                size:
+                  type: integer
+                page_count:
+                  type: integer
+                created_at:
+                  type: string
+                  format: date-time
+                  readOnly: true
+                updated_at:
+                  type: string
+                  format: date-time
+                  readOnly: true
+              required:
+              - title
+            relationships:
+              type: object
+              properties:
+                parent:
+                  $ref: '#/components/schemas/reltoone'
+    PatchedFolder:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - folders
+            id:
+              type: string
+              format: uuid
+            attributes:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                title:
+                  type: string
+                  maxLength: 200
+                tags:
+                  type: string
+                created_at:
+                  type: string
+                  format: date-time
+                  readOnly: true
+                updated_at:
+                  type: string
+                  format: date-time
+                  readOnly: true
+              required:
+              - title
+            relationships:
+              type: object
+              properties:
+                parent:
+                  $ref: '#/components/schemas/reltoone'
+    PatchedGroup:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - groups
+            id:
+              type: string
+              format: uuid
+            attributes:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  readOnly: true
+                name:
+                  type: string
+                  maxLength: 150
+              required:
+              - name
+            relationships:
+              type: object
+              properties:
+                permissions:
+                  $ref: '#/components/schemas/reltomany'
+    PatchedNode:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - documents
+              - folders
+            id:
+              type: string
+              format: uuid
+            attributes:
+              type: object
+              properties:
+                title:
+                  type: string
+                  maxLength: 200
+                created_at:
+                  type: string
+                  format: date-time
+                  readOnly: true
+                updated_at:
+                  type: string
+                  format: date-time
+                  readOnly: true
+              required:
+              - title
+            relationships:
+              type: object
+              properties:
+                parent:
+                  $ref: '#/components/schemas/reltoone'
+    PatchedNodeTags:
+      type: object
+      properties:
+        tags:
+          type: array
+          items:
+            type: string
+    PatchedTag:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - tags
+            id:
+              type: string
+              format: uuid
+            attributes:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+                  maxLength: 100
+                bg_color:
+                  type: string
+                  title: Background Color
+                  maxLength: 7
+                fg_color:
+                  type: string
+                  title: Foreground Color
+                  maxLength: 7
+                description:
+                  type: string
+                  nullable: true
+                  title: Description (optional)
+                  maxLength: 1024
+                pinned:
+                  type: boolean
+                  description: Pinned tag will be displayed under Documents menu.
+                    It serves as shortcut to quickly filter folders/documents associated
+                    with this tag
+              required:
+              - name
+    PatchedUser:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - users
+            id:
+              type: string
+              format: uuid
+            attributes:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: Required. 150 characters or fewer. Letters, digits
+                    and @/./+/-/_ only.
+                  pattern: ^[\w.@+-]+$
+                  maxLength: 150
+                first_name:
+                  type: string
+                  maxLength: 150
+                last_name:
+                  type: string
+                  maxLength: 150
+                email:
+                  type: string
+                  format: email
+                  title: Email address
+                  maxLength: 254
+                is_active:
+                  type: boolean
+                  title: Active
+                  description: Designates whether this user should be treated as active.
+                    Unselect this instead of deleting accounts.
+                is_staff:
+                  type: boolean
+                  title: Staff status
+                  description: Designates whether the user can log into this admin
+                    site.
+                is_superuser:
+                  type: boolean
+                  title: Superuser status
+                  description: Designates that this user has all permissions without
+                    explicitly assigning them.
+                date_joined:
+                  type: string
+                  format: date-time
+                  readOnly: true
+                user_permissions:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Permission'
+                  readOnly: true
+                perm_codenames:
+                  type: array
+                  items:
+                    type: string
+                    maxLength: 200
+                  readOnly: true
+              required:
+              - username
+            relationships:
+              type: object
+              properties:
+                inbox_folder:
+                  $ref: '#/components/schemas/reltoone'
+                home_folder:
+                  $ref: '#/components/schemas/reltoone'
+                groups:
+                  $ref: '#/components/schemas/reltomany'
+    Permission:
+      type: object
+      description: |-
+        A `ModelSerializer` is just a regular `Serializer`, except that:
+
+        * A set of default fields are automatically populated.
+        * A set of default validators are automatically populated.
+        * Default `.create()` and `.update()` implementations are provided.
+
+        The process of automatically determining a set of serializer fields
+        based on the model fields is reasonably complex, but you almost certainly
+        don't need to dig into the implementation.
+
+        If the `ModelSerializer` class *doesn't* generate the set of fields that
+        you need you should either declare the extra/differing fields explicitly on
+        the serializer class, or simply use a `Serializer` class.
+
+
+        Included Mixins:
+
+        * A mixin class to enable sparse fieldsets is included
+        * A mixin class to enable validation of included resources is included
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        codename:
+          type: string
+          readOnly: true
+        content_type:
+          type: integer
+          readOnly: true
+      required:
+      - codename
+      - content_type
+      - id
+      - name
+    ResourceIdentifierObject:
+      oneOf:
+      - $ref: '#/components/schemas/relationshipToOne'
+      - $ref: '#/components/schemas/relationshipToMany'
+    SearchResult:
+      type: object
+      description: |-
+        A `Serializer` is a model-less serializer class with additional
+        support for JSON:API spec features.
+
+        As in JSON:API specification a type is always required you need to
+        make sure that you define `resource_name` in your `Meta` class
+        when deriving from this class.
+
+        Included Mixins:
+
+        * A mixin class to enable sparse fieldsets is included
+        * A mixin class to enable validation of included resources is included
+      properties:
+        id:
+          type: string
+          format: uuid
+        text:
+          type: string
+          default: ''
+        title:
+          type: string
+        tags:
+          type: string
+        highlight:
+          type: string
+        breadcrumb:
+          type: array
+          items:
+            type: string
+        node_type:
+          $ref: '#/components/schemas/NodeTypeEnum'
+        user_id:
+          type: string
+          format: uuid
+      required:
+      - breadcrumb
+      - highlight
+      - id
+      - node_type
+      - title
+      - user_id
+    Tag:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - tags
+            id:
+              type: string
+              format: uuid
+            attributes:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+                  maxLength: 100
+                bg_color:
+                  type: string
+                  title: Background Color
+                  maxLength: 7
+                fg_color:
+                  type: string
+                  title: Foreground Color
+                  maxLength: 7
+                description:
+                  type: string
+                  nullable: true
+                  title: Description (optional)
+                  maxLength: 1024
+                pinned:
+                  type: boolean
+                  description: Pinned tag will be displayed under Documents menu.
+                    It serves as shortcut to quickly filter folders/documents associated
+                    with this tag
+              required:
+              - name
+    Token:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - tokens
+            id:
+              type: string
+              format: uuid
+            attributes:
+              type: object
+              properties:
+                token:
+                  type: string
+                  maxLength: 256
+                digest:
+                  type: string
+                  maxLength: 128
+                created:
+                  type: string
+                  format: date-time
+                  readOnly: true
+                expiry:
+                  type: string
+                  format: date-time
+                  nullable: true
+              required:
+              - digest
+    User:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - users
+            id:
+              type: string
+              format: uuid
+            attributes:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: Required. 150 characters or fewer. Letters, digits
+                    and @/./+/-/_ only.
+                  pattern: ^[\w.@+-]+$
+                  maxLength: 150
+                first_name:
+                  type: string
+                  maxLength: 150
+                last_name:
+                  type: string
+                  maxLength: 150
+                email:
+                  type: string
+                  format: email
+                  title: Email address
+                  maxLength: 254
+                is_active:
+                  type: boolean
+                  title: Active
+                  description: Designates whether this user should be treated as active.
+                    Unselect this instead of deleting accounts.
+                is_staff:
+                  type: boolean
+                  title: Staff status
+                  description: Designates whether the user can log into this admin
+                    site.
+                is_superuser:
+                  type: boolean
+                  title: Superuser status
+                  description: Designates that this user has all permissions without
+                    explicitly assigning them.
+                date_joined:
+                  type: string
+                  format: date-time
+                  readOnly: true
+                user_permissions:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Permission'
+                  readOnly: true
+                perm_codenames:
+                  type: array
+                  items:
+                    type: string
+                    maxLength: 200
+                  readOnly: true
+              required:
+              - username
+            relationships:
+              type: object
+              properties:
+                inbox_folder:
+                  $ref: '#/components/schemas/reltoone'
+                home_folder:
+                  $ref: '#/components/schemas/reltoone'
+                groups:
+                  $ref: '#/components/schemas/reltomany'
+    Version:
+      type: object
+      properties:
+        version:
+          type: string
+          maxLength: 32
+      required:
+      - version
+    datum:
+      description: singular item
+      properties:
+        data:
+          $ref: '#/components/schemas/resource'
+    error:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+        links:
+          $ref: '#/components/schemas/links'
+        code:
+          type: string
+        title:
+          type: string
+        detail:
+          type: string
+        source:
+          type: object
+          properties:
+            pointer:
+              type: string
+              description: A [JSON Pointer](https://tools.ietf.org/html/rfc6901) to
+                the associated entity in the request document [e.g. `/data` for a
+                primary data object, or `/data/attributes/title` for a specific attribute.
+            parameter:
+              type: string
+              description: A string indicating which query parameter caused the error.
+            meta:
+              $ref: '#/components/schemas/meta'
+    errors:
+      type: array
+      items:
+        $ref: '#/components/schemas/error'
+      uniqueItems: true
+    failure:
+      type: object
+      required:
+      - errors
+      properties:
+        errors:
+          $ref: '#/components/schemas/errors'
+        meta:
+          $ref: '#/components/schemas/meta'
+        jsonapi:
+          $ref: '#/components/schemas/jsonapi'
+        links:
+          $ref: '#/components/schemas/links'
+    id:
+      type: string
+      description: Each resource object’s type and id pair MUST [identify](https://jsonapi.org/format/#document-resource-object-identification)
+        a single, unique resource.
+    jsonapi:
+      type: object
+      description: The server's implementation
+      properties:
+        version:
+          type: string
+        meta:
+          $ref: '#/components/schemas/meta'
+      additionalProperties: false
+    link:
+      oneOf:
+      - description: a string containing the link's URL
+        type: string
+        format: uri-reference
+      - type: object
+        required:
+        - href
+        properties:
+          href:
+            description: a string containing the link's URL
+            type: string
+            format: uri-reference
+          meta:
+            $ref: '#/components/schemas/meta'
+    linkage:
+      type: object
+      description: the 'type' and 'id'
+      required:
+      - type
+      - id
+      properties:
+        type:
+          $ref: '#/components/schemas/type'
+        id:
+          $ref: '#/components/schemas/id'
+        meta:
+          $ref: '#/components/schemas/meta'
+    links:
+      type: object
+      additionalProperties:
+        $ref: '#/components/schemas/link'
+    meta:
+      type: object
+      additionalProperties: true
+    nulltype:
+      type: object
+      nullable: true
+      default: null
+    onlymeta:
+      additionalProperties: false
+      properties:
+        meta:
+          $ref: '#/components/schemas/meta'
+    pageref:
+      oneOf:
+      - type: string
+        format: uri-reference
+      - $ref: '#/components/schemas/nulltype'
+    pagination:
+      type: object
+      properties:
+        first:
+          $ref: '#/components/schemas/pageref'
+        last:
+          $ref: '#/components/schemas/pageref'
+        prev:
+          $ref: '#/components/schemas/pageref'
+        next:
+          $ref: '#/components/schemas/pageref'
+    relationshipLinks:
+      description: optional references to other resource objects
+      type: object
+      additionalProperties: true
+      properties:
+        self:
+          $ref: '#/components/schemas/link'
+        related:
+          $ref: '#/components/schemas/link'
+    relationshipToMany:
+      description: An array of objects each containing the 'type' and 'id' for to-many
+        relationships
+      type: array
+      items:
+        $ref: '#/components/schemas/linkage'
+      uniqueItems: true
+    relationshipToOne:
+      description: reference to other resource in a to-one relationship
+      type: object
+      properties:
+        type:
+          type: string
+        id:
+          type: string
+          format: uuid
+    reltomany:
+      description: a multiple 'to-many' relationship
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/relationshipToMany'
+    reltoone:
+      description: a singular 'to-one' relationship
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/relationshipToOne'
+    resource:
+      type: object
+      required:
+      - type
+      - id
+      additionalProperties: false
+      properties:
+        type:
+          $ref: '#/components/schemas/type'
+        id:
+          $ref: '#/components/schemas/id'
+        attributes:
+          type: object
+        relationships:
+          type: object
+        links:
+          $ref: '#/components/schemas/links'
+        meta:
+          $ref: '#/components/schemas/meta'
+    type:
+      type: string
+      description: The [type](https://jsonapi.org/format/#document-resource-object-identification)
+        member is used to describe resource objects that share common attributes and
+        relationships.
+  securitySchemes:
+    Token Authentication:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix Token
