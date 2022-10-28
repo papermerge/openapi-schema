@@ -6,7 +6,7 @@ info:
 paths:
   /api/auth/login/:
     post:
-      operationId: Login/Authenticate
+      operationId: auth_login_create
       description: |-
         Authenticates user with given username and password.
         Response will contain token to be used as part of ``Authorization`` header
@@ -31,7 +31,7 @@ paths:
           description: ''
   /api/auth/logout/:
     post:
-      operationId: Logout
+      operationId: auth_logout_create
       description: |-
         Logs the user out of current session.
 
@@ -56,7 +56,7 @@ paths:
           description: No response body
   /api/auth/logoutall/:
     post:
-      operationId: Logout All
+      operationId: auth_logoutall_create
       description: |-
         Logs the user out of all sessions i.e. deletes all auth tokens for the user.
 
