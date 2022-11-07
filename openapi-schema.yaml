@@ -17,7 +17,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AuthToken'
+              $ref: '#/components/schemas/AuthTokenRequest'
         required: true
       security:
       - Token Authentication: []
@@ -27,7 +27,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthToken'
+                $ref: '#/components/schemas/AuthTokenResponse'
           description: ''
   /api/auth/logout/:
     post:
@@ -2237,7 +2237,7 @@ components:
       - targz
       - zip
       type: string
-    AuthToken:
+    AuthTokenRequest:
       type: object
       properties:
         username:
@@ -2246,13 +2246,17 @@ components:
         password:
           type: string
           writeOnly: true
+      required:
+      - password
+      - username
+    AuthTokenResponse:
+      type: object
+      properties:
         token:
           type: string
           readOnly: true
       required:
-      - password
       - token
-      - username
     CustomUserPreference:
       type: object
       properties:
