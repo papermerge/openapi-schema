@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Papermerge REST API
-  version: 2.1.0b12
+  version: 2.1.0b13
   description: Document management system designed for digital archives
 paths:
   /api/auth/login/:
@@ -209,6 +209,7 @@ paths:
           '*/*':
             schema:
               $ref: '#/components/schemas/DocumentDetails'
+        required: true
       security:
       - Token Authentication: []
       responses:
@@ -268,6 +269,7 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedDocumentDetails'
+        required: true
       security:
       - Token Authentication: []
       responses:
@@ -432,6 +434,7 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/Folder'
+        required: true
       security:
       - Token Authentication: []
       responses:
@@ -488,6 +491,7 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedFolder'
+        required: true
       security:
       - Token Authentication: []
       responses:
@@ -571,6 +575,7 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/Group'
+        required: true
       security:
       - Token Authentication: []
       responses:
@@ -596,11 +601,11 @@ paths:
       security:
       - Token Authentication: []
       responses:
-        '200':
+        '201':
           content:
             application/vnd.api+json:
               schema:
-                $ref: '#/components/schemas/Group'
+                $ref: '#/components/schemas/Data_Group'
           description: ''
     patch:
       operationId: groups_partial_update
@@ -625,6 +630,7 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedGroup'
+        required: true
       security:
       - Token Authentication: []
       responses:
@@ -712,7 +718,8 @@ paths:
         content:
           application/vnd.api+json:
             schema:
-              $ref: '#/components/schemas/Node'
+              $ref: '#/components/schemas/Data_Node'
+        required: true
       security:
       - Token Authentication: []
       responses:
@@ -720,17 +727,23 @@ paths:
           content:
             application/vnd.api+json:
               schema:
-                $ref: '#/components/schemas/Node'
+                $ref: '#/components/schemas/Data_Node'
           description: ''
   /api/nodes/{id}/:
     get:
-      operationId: Retrieve Node
+      operationId: node_retrieve
       description: |-
         Documents can be organized in folders. One folder can contain documents as
         well as other folders. A node is a convinient abstraction of two concepts -
         'folder' and 'document'. Each node has a type field with value either
         'folders' or 'documents' depending on what kind of node it is.
       parameters:
+      - name: filter[search]
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
       - in: path
         name: id
         schema:
@@ -738,6 +751,24 @@ paths:
           format: uuid
         description: A UUID string identifying this Documents.
         required: true
+      - name: page[number]
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page[size]
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: sort
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
       tags:
       - nodes
       security:
@@ -747,7 +778,7 @@ paths:
           content:
             application/vnd.api+json:
               schema:
-                $ref: '#/components/schemas/Node'
+                $ref: '#/components/schemas/PaginatedNodeList'
           description: ''
     patch:
       operationId: nodes_partial_update
@@ -771,6 +802,7 @@ paths:
           application/vnd.api+json:
             schema:
               $ref: '#/components/schemas/PatchedNode'
+        required: true
       security:
       - Token Authentication: []
       responses:
@@ -1726,6 +1758,7 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/Tag'
+        required: true
       security:
       - Token Authentication: []
       responses:
@@ -1836,6 +1869,7 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedTag'
+        required: true
       security:
       - Token Authentication: []
       responses:
@@ -1954,6 +1988,7 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/Token'
+        required: true
       security:
       - Token Authentication: []
       responses:
@@ -2060,6 +2095,7 @@ paths:
           application/vnd.api+json:
             schema:
               $ref: '#/components/schemas/User'
+        required: true
       security:
       - Token Authentication: []
       responses:
@@ -2110,6 +2146,7 @@ paths:
           application/vnd.api+json:
             schema:
               $ref: '#/components/schemas/PatchedUser'
+        required: true
       security:
       - Token Authentication: []
       responses:
@@ -2185,7 +2222,7 @@ paths:
           content:
             application/vnd.api+json:
               schema:
-                $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/Data_User'
           description: ''
   /api/version/:
     get:
@@ -2300,71 +2337,91 @@ components:
       - section
       - value
       - verbose_name
-    DocumentDetails:
+    Data_Group:
       type: object
       properties:
         data:
+          $ref: '#/components/schemas/Group'
+      required:
+      - data
+    Data_Node:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Node'
+      required:
+      - data
+    Data_User:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/User'
+      required:
+      - data
+    DocumentDetails:
+      type: object
+      additionalProperties: false
+      required:
+      - type
+      properties:
+        type:
+          $ref: '#/components/schemas/DocumentDetailsTypeEnum'
+        id:
+          type: string
+          format: uuid
+        attributes:
           type: object
-          additionalProperties: false
-          required:
-          - type
           properties:
-            type:
-              type: string
-              enum:
-              - documents
             id:
               type: string
               format: uuid
-            attributes:
-              type: object
-              properties:
-                id:
-                  type: string
-                  format: uuid
-                title:
-                  type: string
-                  maxLength: 200
-                lang:
-                  type: string
-                  title: Language
-                  maxLength: 8
-                file_name:
-                  type: string
-                ocr:
-                  type: boolean
-                ocr_status:
-                  enum:
-                  - unknown
-                  - received
-                  - started
-                  - succeeded
-                  - failed
-                  type: string
-                versions:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/DocumentVersion'
-                  readOnly: true
-                size:
-                  type: integer
-                page_count:
-                  type: integer
-                created_at:
-                  type: string
-                  format: date-time
-                  readOnly: true
-                updated_at:
-                  type: string
-                  format: date-time
-                  readOnly: true
-              required:
-              - title
-            relationships:
-              type: object
-              properties:
-                parent:
-                  $ref: '#/components/schemas/reltoone'
+            title:
+              type: string
+              maxLength: 200
+            lang:
+              type: string
+              title: Language
+              maxLength: 8
+            file_name:
+              type: string
+            ocr:
+              type: boolean
+            ocr_status:
+              enum:
+              - unknown
+              - received
+              - started
+              - succeeded
+              - failed
+              type: string
+            versions:
+              type: array
+              items:
+                $ref: '#/components/schemas/DocumentVersion'
+              readOnly: true
+            size:
+              type: integer
+            page_count:
+              type: integer
+            created_at:
+              type: string
+              format: date-time
+              readOnly: true
+            updated_at:
+              type: string
+              format: date-time
+              readOnly: true
+          required:
+          - title
+        relationships:
+          type: object
+          properties:
+            parent:
+              $ref: '#/components/schemas/reltoone'
+    DocumentDetailsTypeEnum:
+      type: string
+      enum:
+      - documents
     DocumentVersion:
       type: object
       description: |-
@@ -2457,78 +2514,76 @@ components:
       - src
     Folder:
       type: object
+      additionalProperties: false
+      required:
+      - type
       properties:
-        data:
+        type:
+          $ref: '#/components/schemas/FolderTypeEnum'
+        id:
+          type: string
+          format: uuid
+        attributes:
           type: object
-          additionalProperties: false
-          required:
-          - type
           properties:
-            type:
-              type: string
-              enum:
-              - folders
             id:
               type: string
               format: uuid
-            attributes:
-              type: object
-              properties:
-                id:
-                  type: string
-                  format: uuid
-                title:
-                  type: string
-                  maxLength: 200
-                tags:
-                  type: string
-                created_at:
-                  type: string
-                  format: date-time
-                  readOnly: true
-                updated_at:
-                  type: string
-                  format: date-time
-                  readOnly: true
-              required:
-              - title
-            relationships:
-              type: object
-              properties:
-                parent:
-                  $ref: '#/components/schemas/reltoone'
+            title:
+              type: string
+              maxLength: 200
+            tags:
+              type: string
+            created_at:
+              type: string
+              format: date-time
+              readOnly: true
+            updated_at:
+              type: string
+              format: date-time
+              readOnly: true
+          required:
+          - title
+        relationships:
+          type: object
+          properties:
+            parent:
+              $ref: '#/components/schemas/reltoone'
+    FolderTypeEnum:
+      type: string
+      enum:
+      - folders
     Group:
       type: object
+      additionalProperties: false
+      required:
+      - type
       properties:
-        data:
+        type:
+          $ref: '#/components/schemas/GroupTypeEnum'
+        id:
+          type: string
+          format: uuid
+        attributes:
           type: object
-          additionalProperties: false
-          required:
-          - type
           properties:
-            type:
-              type: string
-              enum:
-              - groups
             id:
+              type: integer
+              readOnly: true
+            name:
               type: string
-              format: uuid
-            attributes:
-              type: object
-              properties:
-                id:
-                  type: integer
-                  readOnly: true
-                name:
-                  type: string
-                  maxLength: 150
-              required:
-              - name
-            relationships:
-              type: object
-              properties:
-                permissions:
-                  $ref: '#/components/schemas/reltomany'
+              maxLength: 150
+          required:
+          - name
+        relationships:
+          type: object
+          properties:
+            permissions:
+              $ref: '#/components/schemas/reltomany'
+    GroupTypeEnum:
+      type: string
+      enum:
+      - groups
     InboxCount:
       type: object
       properties:
@@ -2543,42 +2598,36 @@ components:
       type: string
     Node:
       type: object
+      additionalProperties: false
+      required:
+      - type
       properties:
-        data:
+        type:
+          $ref: '#/components/schemas/NodeTypeEnum'
+        id:
+          type: string
+          format: uuid
+        attributes:
           type: object
-          additionalProperties: false
-          required:
-          - type
           properties:
-            type:
+            title:
               type: string
-              enum:
-              - documents
-              - folders
-            id:
+              maxLength: 200
+            created_at:
               type: string
-              format: uuid
-            attributes:
-              type: object
-              properties:
-                title:
-                  type: string
-                  maxLength: 200
-                created_at:
-                  type: string
-                  format: date-time
-                  readOnly: true
-                updated_at:
-                  type: string
-                  format: date-time
-                  readOnly: true
-              required:
-              - title
-            relationships:
-              type: object
-              properties:
-                parent:
-                  $ref: '#/components/schemas/reltoone'
+              format: date-time
+              readOnly: true
+            updated_at:
+              type: string
+              format: date-time
+              readOnly: true
+          required:
+          - title
+        relationships:
+          type: object
+          properties:
+            parent:
+              $ref: '#/components/schemas/reltoone'
     NodeID:
       type: object
       properties:
@@ -2609,10 +2658,10 @@ components:
       required:
       - tags
     NodeTypeEnum:
-      enum:
-      - document
-      - folder
       type: string
+      enum:
+      - Document
+      - folders
     NodesDownload:
       type: object
       properties:
@@ -2648,44 +2697,39 @@ components:
       - lang
     Page:
       type: object
+      additionalProperties: false
+      required:
+      - type
       properties:
-        data:
+        type:
+          $ref: '#/components/schemas/PageTypeEnum'
+        id:
+          type: string
+          format: uuid
+        attributes:
           type: object
-          additionalProperties: false
-          required:
-          - type
           properties:
-            type:
-              type: string
-              enum:
-              - pages
             id:
               type: string
               format: uuid
-            attributes:
-              type: object
-              properties:
-                id:
-                  type: string
-                  format: uuid
-                number:
-                  type: integer
-                text:
-                  type: string
-                lang:
-                  type: string
-                  maxLength: 8
-                svg_url:
-                  type: string
-                  readOnly: true
-                jpg_url:
-                  type: string
-                  readOnly: true
-            relationships:
-              type: object
-              properties:
-                document_version:
-                  $ref: '#/components/schemas/reltoone'
+            number:
+              type: integer
+            text:
+              type: string
+            lang:
+              type: string
+              maxLength: 8
+            svg_url:
+              type: string
+              readOnly: true
+            jpg_url:
+              type: string
+              readOnly: true
+        relationships:
+          type: object
+          properties:
+            document_version:
+              $ref: '#/components/schemas/reltoone'
     PageReorder:
       type: object
       properties:
@@ -2715,6 +2759,10 @@ components:
       required:
       - angle
       - id
+    PageTypeEnum:
+      type: string
+      enum:
+      - pages
     PagesMoveToDocument:
       type: object
       properties:
@@ -3175,181 +3223,160 @@ components:
           readOnly: true
     PatchedDocumentDetails:
       type: object
+      additionalProperties: false
+      required:
+      - type
       properties:
-        data:
+        type:
+          $ref: '#/components/schemas/DocumentDetailsTypeEnum'
+        id:
+          type: string
+          format: uuid
+        attributes:
           type: object
-          additionalProperties: false
-          required:
-          - type
           properties:
-            type:
-              type: string
-              enum:
-              - documents
             id:
               type: string
               format: uuid
-            attributes:
-              type: object
-              properties:
-                id:
-                  type: string
-                  format: uuid
-                title:
-                  type: string
-                  maxLength: 200
-                lang:
-                  type: string
-                  title: Language
-                  maxLength: 8
-                file_name:
-                  type: string
-                ocr:
-                  type: boolean
-                ocr_status:
-                  enum:
-                  - unknown
-                  - received
-                  - started
-                  - succeeded
-                  - failed
-                  type: string
-                versions:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/DocumentVersion'
-                  readOnly: true
-                size:
-                  type: integer
-                page_count:
-                  type: integer
-                created_at:
-                  type: string
-                  format: date-time
-                  readOnly: true
-                updated_at:
-                  type: string
-                  format: date-time
-                  readOnly: true
-              required:
-              - title
-            relationships:
-              type: object
-              properties:
-                parent:
-                  $ref: '#/components/schemas/reltoone'
+            title:
+              type: string
+              maxLength: 200
+            lang:
+              type: string
+              title: Language
+              maxLength: 8
+            file_name:
+              type: string
+            ocr:
+              type: boolean
+            ocr_status:
+              enum:
+              - unknown
+              - received
+              - started
+              - succeeded
+              - failed
+              type: string
+            versions:
+              type: array
+              items:
+                $ref: '#/components/schemas/DocumentVersion'
+              readOnly: true
+            size:
+              type: integer
+            page_count:
+              type: integer
+            created_at:
+              type: string
+              format: date-time
+              readOnly: true
+            updated_at:
+              type: string
+              format: date-time
+              readOnly: true
+          required:
+          - title
+        relationships:
+          type: object
+          properties:
+            parent:
+              $ref: '#/components/schemas/reltoone'
     PatchedFolder:
       type: object
+      additionalProperties: false
+      required:
+      - type
       properties:
-        data:
+        type:
+          $ref: '#/components/schemas/FolderTypeEnum'
+        id:
+          type: string
+          format: uuid
+        attributes:
           type: object
-          additionalProperties: false
-          required:
-          - type
           properties:
-            type:
-              type: string
-              enum:
-              - folders
             id:
               type: string
               format: uuid
-            attributes:
-              type: object
-              properties:
-                id:
-                  type: string
-                  format: uuid
-                title:
-                  type: string
-                  maxLength: 200
-                tags:
-                  type: string
-                created_at:
-                  type: string
-                  format: date-time
-                  readOnly: true
-                updated_at:
-                  type: string
-                  format: date-time
-                  readOnly: true
-              required:
-              - title
-            relationships:
-              type: object
-              properties:
-                parent:
-                  $ref: '#/components/schemas/reltoone'
+            title:
+              type: string
+              maxLength: 200
+            tags:
+              type: string
+            created_at:
+              type: string
+              format: date-time
+              readOnly: true
+            updated_at:
+              type: string
+              format: date-time
+              readOnly: true
+          required:
+          - title
+        relationships:
+          type: object
+          properties:
+            parent:
+              $ref: '#/components/schemas/reltoone'
     PatchedGroup:
       type: object
+      additionalProperties: false
+      required:
+      - type
       properties:
-        data:
+        type:
+          $ref: '#/components/schemas/GroupTypeEnum'
+        id:
+          type: string
+          format: uuid
+        attributes:
           type: object
-          additionalProperties: false
-          required:
-          - type
           properties:
-            type:
-              type: string
-              enum:
-              - groups
             id:
+              type: integer
+              readOnly: true
+            name:
               type: string
-              format: uuid
-            attributes:
-              type: object
-              properties:
-                id:
-                  type: integer
-                  readOnly: true
-                name:
-                  type: string
-                  maxLength: 150
-              required:
-              - name
-            relationships:
-              type: object
-              properties:
-                permissions:
-                  $ref: '#/components/schemas/reltomany'
+              maxLength: 150
+          required:
+          - name
+        relationships:
+          type: object
+          properties:
+            permissions:
+              $ref: '#/components/schemas/reltomany'
     PatchedNode:
       type: object
+      additionalProperties: false
+      required:
+      - type
       properties:
-        data:
+        type:
+          $ref: '#/components/schemas/NodeTypeEnum'
+        id:
+          type: string
+          format: uuid
+        attributes:
           type: object
-          additionalProperties: false
-          required:
-          - type
           properties:
-            type:
+            title:
               type: string
-              enum:
-              - documents
-              - folders
-            id:
+              maxLength: 200
+            created_at:
               type: string
-              format: uuid
-            attributes:
-              type: object
-              properties:
-                title:
-                  type: string
-                  maxLength: 200
-                created_at:
-                  type: string
-                  format: date-time
-                  readOnly: true
-                updated_at:
-                  type: string
-                  format: date-time
-                  readOnly: true
-              required:
-              - title
-            relationships:
-              type: object
-              properties:
-                parent:
-                  $ref: '#/components/schemas/reltoone'
+              format: date-time
+              readOnly: true
+            updated_at:
+              type: string
+              format: date-time
+              readOnly: true
+          required:
+          - title
+        relationships:
+          type: object
+          properties:
+            parent:
+              $ref: '#/components/schemas/reltoone'
     PatchedNodeTags:
       type: object
       properties:
@@ -3359,126 +3386,115 @@ components:
             type: string
     PatchedTag:
       type: object
+      additionalProperties: false
+      required:
+      - type
       properties:
-        data:
+        type:
+          $ref: '#/components/schemas/TagTypeEnum'
+        id:
+          type: string
+          format: uuid
+        attributes:
           type: object
-          additionalProperties: false
-          required:
-          - type
           properties:
-            type:
-              type: string
-              enum:
-              - tags
             id:
               type: string
               format: uuid
-            attributes:
-              type: object
-              properties:
-                id:
-                  type: string
-                  format: uuid
-                name:
-                  type: string
-                  maxLength: 100
-                bg_color:
-                  type: string
-                  title: Background Color
-                  maxLength: 7
-                fg_color:
-                  type: string
-                  title: Foreground Color
-                  maxLength: 7
-                description:
-                  type: string
-                  nullable: true
-                  title: Description (optional)
-                  maxLength: 1024
-                pinned:
-                  type: boolean
-                  description: Pinned tag will be displayed under Documents menu.
-                    It serves as shortcut to quickly filter folders/documents associated
-                    with this tag
-              required:
-              - name
+            name:
+              type: string
+              maxLength: 100
+            bg_color:
+              type: string
+              title: Background Color
+              maxLength: 7
+            fg_color:
+              type: string
+              title: Foreground Color
+              maxLength: 7
+            description:
+              type: string
+              nullable: true
+              title: Description (optional)
+              maxLength: 1024
+            pinned:
+              type: boolean
+              description: Pinned tag will be displayed under Documents menu. It serves
+                as shortcut to quickly filter folders/documents associated with this
+                tag
+          required:
+          - name
     PatchedUser:
       type: object
+      additionalProperties: false
+      required:
+      - type
       properties:
-        data:
+        type:
+          $ref: '#/components/schemas/UserTypeEnum'
+        id:
+          type: string
+          format: uuid
+        attributes:
           type: object
-          additionalProperties: false
-          required:
-          - type
           properties:
-            type:
+            username:
               type: string
-              enum:
-              - users
-            id:
+              description: Required. 150 characters or fewer. Letters, digits and
+                @/./+/-/_ only.
+              pattern: ^[\w.@+-]+$
+              maxLength: 150
+            first_name:
               type: string
-              format: uuid
-            attributes:
-              type: object
-              properties:
-                username:
-                  type: string
-                  description: Required. 150 characters or fewer. Letters, digits
-                    and @/./+/-/_ only.
-                  pattern: ^[\w.@+-]+$
-                  maxLength: 150
-                first_name:
-                  type: string
-                  maxLength: 150
-                last_name:
-                  type: string
-                  maxLength: 150
-                email:
-                  type: string
-                  format: email
-                  title: Email address
-                  maxLength: 254
-                is_active:
-                  type: boolean
-                  title: Active
-                  description: Designates whether this user should be treated as active.
-                    Unselect this instead of deleting accounts.
-                is_staff:
-                  type: boolean
-                  title: Staff status
-                  description: Designates whether the user can log into this admin
-                    site.
-                is_superuser:
-                  type: boolean
-                  title: Superuser status
-                  description: Designates that this user has all permissions without
-                    explicitly assigning them.
-                date_joined:
-                  type: string
-                  format: date-time
-                  readOnly: true
-                user_permissions:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Permission'
-                  readOnly: true
-                perm_codenames:
-                  type: array
-                  items:
-                    type: string
-                    maxLength: 200
-                  readOnly: true
-              required:
-              - username
-            relationships:
-              type: object
-              properties:
-                inbox_folder:
-                  $ref: '#/components/schemas/reltoone'
-                home_folder:
-                  $ref: '#/components/schemas/reltoone'
-                groups:
-                  $ref: '#/components/schemas/reltomany'
+              maxLength: 150
+            last_name:
+              type: string
+              maxLength: 150
+            email:
+              type: string
+              format: email
+              title: Email address
+              maxLength: 254
+            is_active:
+              type: boolean
+              title: Active
+              description: Designates whether this user should be treated as active.
+                Unselect this instead of deleting accounts.
+            is_staff:
+              type: boolean
+              title: Staff status
+              description: Designates whether the user can log into this admin site.
+            is_superuser:
+              type: boolean
+              title: Superuser status
+              description: Designates that this user has all permissions without explicitly
+                assigning them.
+            date_joined:
+              type: string
+              format: date-time
+              readOnly: true
+            user_permissions:
+              type: array
+              items:
+                $ref: '#/components/schemas/Permission'
+              readOnly: true
+            perm_codenames:
+              type: array
+              items:
+                type: string
+                maxLength: 200
+              readOnly: true
+          required:
+          - username
+        relationships:
+          type: object
+          properties:
+            inbox_folder:
+              $ref: '#/components/schemas/reltoone'
+            home_folder:
+              $ref: '#/components/schemas/reltoone'
+            groups:
+              $ref: '#/components/schemas/reltomany'
     Permission:
       type: object
       description: |-
@@ -3568,161 +3584,157 @@ components:
       - user_id
     Tag:
       type: object
+      additionalProperties: false
+      required:
+      - type
       properties:
-        data:
+        type:
+          $ref: '#/components/schemas/TagTypeEnum'
+        id:
+          type: string
+          format: uuid
+        attributes:
           type: object
-          additionalProperties: false
-          required:
-          - type
           properties:
-            type:
-              type: string
-              enum:
-              - tags
             id:
               type: string
               format: uuid
-            attributes:
-              type: object
-              properties:
-                id:
-                  type: string
-                  format: uuid
-                name:
-                  type: string
-                  maxLength: 100
-                bg_color:
-                  type: string
-                  title: Background Color
-                  maxLength: 7
-                fg_color:
-                  type: string
-                  title: Foreground Color
-                  maxLength: 7
-                description:
-                  type: string
-                  nullable: true
-                  title: Description (optional)
-                  maxLength: 1024
-                pinned:
-                  type: boolean
-                  description: Pinned tag will be displayed under Documents menu.
-                    It serves as shortcut to quickly filter folders/documents associated
-                    with this tag
-              required:
-              - name
+            name:
+              type: string
+              maxLength: 100
+            bg_color:
+              type: string
+              title: Background Color
+              maxLength: 7
+            fg_color:
+              type: string
+              title: Foreground Color
+              maxLength: 7
+            description:
+              type: string
+              nullable: true
+              title: Description (optional)
+              maxLength: 1024
+            pinned:
+              type: boolean
+              description: Pinned tag will be displayed under Documents menu. It serves
+                as shortcut to quickly filter folders/documents associated with this
+                tag
+          required:
+          - name
+    TagTypeEnum:
+      type: string
+      enum:
+      - tags
     Token:
       type: object
+      additionalProperties: false
+      required:
+      - type
       properties:
-        data:
+        type:
+          $ref: '#/components/schemas/TokenTypeEnum'
+        id:
+          type: string
+          format: uuid
+        attributes:
           type: object
-          additionalProperties: false
-          required:
-          - type
           properties:
-            type:
+            token:
               type: string
-              enum:
-              - tokens
-            id:
+              maxLength: 256
+            digest:
               type: string
-              format: uuid
-            attributes:
-              type: object
-              properties:
-                token:
-                  type: string
-                  maxLength: 256
-                digest:
-                  type: string
-                  maxLength: 128
-                created:
-                  type: string
-                  format: date-time
-                  readOnly: true
-                expiry:
-                  type: string
-                  format: date-time
-                  nullable: true
-              required:
-              - digest
+              maxLength: 128
+            created:
+              type: string
+              format: date-time
+              readOnly: true
+            expiry:
+              type: string
+              format: date-time
+              nullable: true
+          required:
+          - digest
+    TokenTypeEnum:
+      type: string
+      enum:
+      - tokens
     User:
       type: object
+      additionalProperties: false
+      required:
+      - type
       properties:
-        data:
+        type:
+          $ref: '#/components/schemas/UserTypeEnum'
+        id:
+          type: string
+          format: uuid
+        attributes:
           type: object
-          additionalProperties: false
-          required:
-          - type
           properties:
-            type:
+            username:
               type: string
-              enum:
-              - users
-            id:
+              description: Required. 150 characters or fewer. Letters, digits and
+                @/./+/-/_ only.
+              pattern: ^[\w.@+-]+$
+              maxLength: 150
+            first_name:
               type: string
-              format: uuid
-            attributes:
-              type: object
-              properties:
-                username:
-                  type: string
-                  description: Required. 150 characters or fewer. Letters, digits
-                    and @/./+/-/_ only.
-                  pattern: ^[\w.@+-]+$
-                  maxLength: 150
-                first_name:
-                  type: string
-                  maxLength: 150
-                last_name:
-                  type: string
-                  maxLength: 150
-                email:
-                  type: string
-                  format: email
-                  title: Email address
-                  maxLength: 254
-                is_active:
-                  type: boolean
-                  title: Active
-                  description: Designates whether this user should be treated as active.
-                    Unselect this instead of deleting accounts.
-                is_staff:
-                  type: boolean
-                  title: Staff status
-                  description: Designates whether the user can log into this admin
-                    site.
-                is_superuser:
-                  type: boolean
-                  title: Superuser status
-                  description: Designates that this user has all permissions without
-                    explicitly assigning them.
-                date_joined:
-                  type: string
-                  format: date-time
-                  readOnly: true
-                user_permissions:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Permission'
-                  readOnly: true
-                perm_codenames:
-                  type: array
-                  items:
-                    type: string
-                    maxLength: 200
-                  readOnly: true
-              required:
-              - username
-            relationships:
-              type: object
-              properties:
-                inbox_folder:
-                  $ref: '#/components/schemas/reltoone'
-                home_folder:
-                  $ref: '#/components/schemas/reltoone'
-                groups:
-                  $ref: '#/components/schemas/reltomany'
+              maxLength: 150
+            last_name:
+              type: string
+              maxLength: 150
+            email:
+              type: string
+              format: email
+              title: Email address
+              maxLength: 254
+            is_active:
+              type: boolean
+              title: Active
+              description: Designates whether this user should be treated as active.
+                Unselect this instead of deleting accounts.
+            is_staff:
+              type: boolean
+              title: Staff status
+              description: Designates whether the user can log into this admin site.
+            is_superuser:
+              type: boolean
+              title: Superuser status
+              description: Designates that this user has all permissions without explicitly
+                assigning them.
+            date_joined:
+              type: string
+              format: date-time
+              readOnly: true
+            user_permissions:
+              type: array
+              items:
+                $ref: '#/components/schemas/Permission'
+              readOnly: true
+            perm_codenames:
+              type: array
+              items:
+                type: string
+                maxLength: 200
+              readOnly: true
+          required:
+          - username
+        relationships:
+          type: object
+          properties:
+            inbox_folder:
+              $ref: '#/components/schemas/reltoone'
+            home_folder:
+              $ref: '#/components/schemas/reltoone'
+            groups:
+              $ref: '#/components/schemas/reltomany'
+    UserTypeEnum:
+      type: string
+      enum:
+      - users
     Version:
       type: object
       properties:
