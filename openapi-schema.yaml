@@ -208,8 +208,8 @@ paths:
         content:
           '*/*':
             schema:
-              $ref: '#/components/schemas/DocumentDetails'
-        required: true
+              type: string
+              format: binary
       security:
       - Token Authentication: []
       responses:
@@ -2661,6 +2661,7 @@ components:
       type: string
       enum:
       - Document
+      - documents
       - folders
     NodesDownload:
       type: object
