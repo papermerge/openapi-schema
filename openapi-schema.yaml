@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Papermerge REST API
-  version: 2.1.0b13
+  version: 2.1.0b14
   description: Document management system designed for digital archives
 paths:
   /api/auth/login/:
@@ -183,6 +183,18 @@ paths:
         specify ``Content-Disposition`` header with value
         'attachment; filename={file_name}'.
       parameters:
+      - in: header
+        name: Content-Disposition
+        schema:
+          type: string
+        required: true
+        examples:
+          ContentDispositionHeaderForFileNamedmydoc1.pdf:
+            value: attachment; filename=mydoc_1.pdf
+            summary: Content disposition header for file namedmydoc_1.pdf
+          ContentDispositionHeaderForFilenamedAbc.pdf:
+            value: attachment; filename=abc.pdf
+            summary: Content disposition header for filenamed abc.pdf
       - in: path
         name: document_id
         schema:
@@ -195,18 +207,11 @@ paths:
           type: string
           pattern: ^[^/]+$
         required: true
-      - in: query
-        name: format
-        schema:
-          type: string
-          enum:
-          - json
-          - vnd.api+json
       tags:
       - documents
       requestBody:
         content:
-          '*/*':
+          application/octet-stream:
             schema:
               type: string
               format: binary
@@ -217,10 +222,7 @@ paths:
           content:
             application/vnd.api+json:
               schema:
-                $ref: '#/components/schemas/DocumentDetails'
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DocumentDetails'
+                $ref: '#/components/schemas/Data_DocumentDetails'
           description: ''
   /api/documents/{id}/:
     get:
@@ -2337,6 +2339,13 @@ components:
       - section
       - value
       - verbose_name
+    Data_DocumentDetails:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/DocumentDetails'
+      required:
+      - data
     Data_Group:
       type: object
       properties:
@@ -2382,8 +2391,6 @@ components:
               type: string
               title: Language
               maxLength: 8
-            file_name:
-              type: string
             ocr:
               type: boolean
             ocr_status:
@@ -2399,10 +2406,6 @@ components:
               items:
                 $ref: '#/components/schemas/DocumentVersion'
               readOnly: true
-            size:
-              type: integer
-            page_count:
-              type: integer
             created_at:
               type: string
               format: date-time
@@ -3246,8 +3249,6 @@ components:
               type: string
               title: Language
               maxLength: 8
-            file_name:
-              type: string
             ocr:
               type: boolean
             ocr_status:
@@ -3263,10 +3264,6 @@ components:
               items:
                 $ref: '#/components/schemas/DocumentVersion'
               readOnly: true
-            size:
-              type: integer
-            page_count:
-              type: integer
             created_at:
               type: string
               format: date-time
