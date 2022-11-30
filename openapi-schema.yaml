@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Papermerge REST API
-  version: 2.1.0b14
+  version: 2.1.0b15
   description: Document management system designed for digital archives
 paths:
   /api/auth/login/:
@@ -1454,7 +1454,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/CustomUserPreference'
-        required: true
       security:
       - Token Authentication: []
       responses:
@@ -1542,7 +1541,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/CustomUserPreference'
-        required: true
       security:
       - Token Authentication: []
       responses:
@@ -2299,46 +2297,32 @@ components:
     CustomUserPreference:
       type: object
       properties:
-        section:
-          type: string
-          readOnly: true
-        name:
-          type: string
-          readOnly: true
-        identifier:
-          type: string
-          readOnly: true
-        default:
-          type: string
-          readOnly: true
-        value:
-          type: string
-        verbose_name:
-          type: string
-          readOnly: true
-        help_text:
-          type: string
-          readOnly: true
-        additional_data:
-          type: string
-          readOnly: true
-        field:
-          type: string
-          readOnly: true
         id:
           type: string
-          readOnly: true
-      required:
-      - additional_data
-      - default
-      - field
-      - help_text
-      - id
-      - identifier
-      - name
-      - section
-      - value
-      - verbose_name
+        type:
+          type: string
+        attributes:
+          type: object
+          properties:
+            section:
+              type: string
+              readOnly: true
+            identifier:
+              type: string
+              readOnly: true
+            default:
+              type: string
+              readOnly: true
+            help_text:
+              type: string
+              readOnly: true
+              nullable: true
+            value:
+              type: string
+              readOnly: true
+            name:
+              type: string
+              readOnly: true
     Data_DocumentDetails:
       type: object
       properties:
@@ -3196,35 +3180,32 @@ components:
     PatchedCustomUserPreference:
       type: object
       properties:
-        section:
-          type: string
-          readOnly: true
-        name:
-          type: string
-          readOnly: true
-        identifier:
-          type: string
-          readOnly: true
-        default:
-          type: string
-          readOnly: true
-        value:
-          type: string
-        verbose_name:
-          type: string
-          readOnly: true
-        help_text:
-          type: string
-          readOnly: true
-        additional_data:
-          type: string
-          readOnly: true
-        field:
-          type: string
-          readOnly: true
         id:
           type: string
-          readOnly: true
+        type:
+          type: string
+        attributes:
+          type: object
+          properties:
+            section:
+              type: string
+              readOnly: true
+            identifier:
+              type: string
+              readOnly: true
+            default:
+              type: string
+              readOnly: true
+            help_text:
+              type: string
+              readOnly: true
+              nullable: true
+            value:
+              type: string
+              readOnly: true
+            name:
+              type: string
+              readOnly: true
     PatchedDocumentDetails:
       type: object
       additionalProperties: false
