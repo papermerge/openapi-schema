@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Papermerge REST API
-  version: 2.1.0b15
+  version: 2.1.0b16
   description: Document management system designed for digital archives
 paths:
   /api/auth/login/:
@@ -1534,13 +1534,38 @@ paths:
         content:
           application/vnd.api+json:
             schema:
-              $ref: '#/components/schemas/CustomUserPreference'
+              type: object
+              properties:
+                ocr__language:
+                  type: string
+                ocr__trigger:
+                  type: string
+                  enum:
+                  - auto
+                  - manual
+                localization__data_format:
+                  type: string
+                localization__time_format:
+                  type: string
+                localization__timezone:
+                  type: string
           application/json:
             schema:
-              $ref: '#/components/schemas/CustomUserPreference'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/CustomUserPreference'
+              type: object
+              properties:
+                ocr__language:
+                  type: string
+                ocr__trigger:
+                  type: string
+                  enum:
+                  - auto
+                  - manual
+                localization__data_format:
+                  type: string
+                localization__time_format:
+                  type: string
+                localization__timezone:
+                  type: string
       security:
       - Token Authentication: []
       responses:
@@ -1548,10 +1573,74 @@ paths:
           content:
             application/vnd.api+json:
               schema:
-                $ref: '#/components/schemas/CustomUserPreference'
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        additional_data:
+                          type: object
+                          properties:
+                            choices:
+                              type: array
+                        default:
+                          type: string
+                        field:
+                          type: object
+                          properties:
+                            class:
+                              type: string
+                            input_type:
+                              type: string
+                        help_text:
+                          type: string
+                        id:
+                          type: string
+                        identifier:
+                          type: string
+                        name:
+                          type: string
+                        section:
+                          type: string
+                        value:
+                          type: string
             application/json:
               schema:
-                $ref: '#/components/schemas/CustomUserPreference'
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        additional_data:
+                          type: object
+                          properties:
+                            choices:
+                              type: array
+                        default:
+                          type: string
+                        field:
+                          type: object
+                          properties:
+                            class:
+                              type: string
+                            input_type:
+                              type: string
+                        help_text:
+                          type: string
+                        id:
+                          type: string
+                        identifier:
+                          type: string
+                        name:
+                          type: string
+                        section:
+                          type: string
+                        value:
+                          type: string
           description: ''
   /api/schema/:
     get:
