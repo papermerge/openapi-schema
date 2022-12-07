@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Papermerge REST API
-  version: 2.1.0b21
+  version: 2.1.0b22
   description: Document management system designed for digital archives
 paths:
   /api/auth/login/:
@@ -1705,7 +1705,6 @@ paths:
         schema:
           type: string
         description: text to search
-        required: true
       - in: query
         name: tags
         schema:
@@ -1718,12 +1717,15 @@ paths:
         name: tags_op
         schema:
           type: string
-        description: "\n                Operator to use when searching by tag. Can\
-          \ be either\n                `any` or `all`.\n                Default value\
-          \ is `all`.\n                For `any` - will return nodes with at least\
-          \ one of\n                    the tags assigned.\n                For `all`\
-          \ - will return only nodes with all of the\n                tags assigned.\n\
-          \                "
+          enum:
+          - all
+          - any
+          default: all
+        description: "\n                Operator to use when searching by tag.\n \
+          \               For `any` - will return nodes with at least one of\n   \
+          \                 the tags assigned.\n                For `all` - will return\
+          \ only nodes with all of the\n                tags assigned.\n         \
+          \       "
       tags:
       - search
       security:
@@ -1733,7 +1735,35 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SearchResult'
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    text:
+                      type: string
+                      nullable: true
+                    title:
+                      type: string
+                    tags:
+                      type: array
+                      items:
+                        type: string
+                    breadcrumb:
+                      type: array
+                      items:
+                        type: string
+                    node_type:
+                      type: string
+                    highlight:
+                      type: string
+                      nullable: true
+                    user_id:
+                      type: string
+                      nullable: true
+                      format: uuid
           description: ''
   /api/tags/:
     get:
@@ -3607,49 +3637,6 @@ components:
       oneOf:
       - $ref: '#/components/schemas/relationshipToOne'
       - $ref: '#/components/schemas/relationshipToMany'
-    SearchResult:
-      type: object
-      description: |-
-        A `Serializer` is a model-less serializer class with additional
-        support for JSON:API spec features.
-
-        As in JSON:API specification a type is always required you need to
-        make sure that you define `resource_name` in your `Meta` class
-        when deriving from this class.
-
-        Included Mixins:
-
-        * A mixin class to enable sparse fieldsets is included
-        * A mixin class to enable validation of included resources is included
-      properties:
-        id:
-          type: string
-          format: uuid
-        text:
-          type: string
-          default: ''
-        title:
-          type: string
-        tags:
-          type: string
-        highlight:
-          type: string
-        breadcrumb:
-          type: array
-          items:
-            type: string
-        node_type:
-          $ref: '#/components/schemas/NodeTypeEnum'
-        user_id:
-          type: string
-          format: uuid
-      required:
-      - breadcrumb
-      - highlight
-      - id
-      - node_type
-      - title
-      - user_id
     Tag:
       type: object
       additionalProperties: false
