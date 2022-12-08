@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Papermerge REST API
-  version: 2.1.0b22
+  version: 2.1.0b23
   description: Document management system designed for digital archives
 paths:
   /api/auth/login/:
@@ -955,24 +955,24 @@ paths:
           description: No response body
   /api/nodes/download/:
     get:
-      operationId: nodes_download_retrieve
-      description: |-
-        Expects one or multiple of following HTTP GET parameters:
-        * node_ids (required) - a list of node IDs to download
-        * file_name - preferred file name for downloaded archive/document file
-        * include_version = 'only_last' or 'only_original'
-            In case when include_version == 'only_last', downloaded
-            archive/document file(s) will contain only last version
-            of the document
-            Respectively for include_version == 'only_original' downloaded
-            archive/document file(s) will contain only orignial version
-            of the document
-            Default value is 'only_last'
-        * archive_type = 'zip' or 'targz'
-            Applies only if there is more than one node to download.
-            Decides on type of archive to create.
-            Default value is 'zip'
+      operationId: nodes_download
+      description: GET /nodes/download/
       parameters:
+      - in: query
+        name: archive_type
+        schema:
+          enum:
+          - targz
+          - zip
+          type: string
+          default: zip
+          minLength: 1
+      - in: query
+        name: file_name
+        schema:
+          type: string
+          maxLength: 32
+          minLength: 1
       - in: query
         name: format
         schema:
@@ -980,6 +980,23 @@ paths:
           enum:
           - json
           - vnd.api+json
+      - in: query
+        name: include_version
+        schema:
+          enum:
+          - only_original
+          - only_last
+          type: string
+          default: only_last
+          minLength: 1
+      - in: query
+        name: node_ids
+        schema:
+          type: array
+          items:
+            type: string
+            format: uuid
+        required: true
       tags:
       - nodes
       security:
@@ -987,12 +1004,18 @@ paths:
       responses:
         '200':
           content:
-            application/vnd.api+json:
+            application/pdf:
               schema:
-                $ref: '#/components/schemas/NodesDownload'
-            application/json:
+                type: string
+                format: binary
+            application/zip:
               schema:
-                $ref: '#/components/schemas/NodesDownload'
+                type: string
+                format: binary
+            application/x-gtar:
+              schema:
+                type: string
+                format: binary
           description: ''
   /api/nodes/inboxcount/:
     get:
@@ -2388,11 +2411,6 @@ components:
       schema:
         type: string
   schemas:
-    ArchiveTypeEnum:
-      enum:
-      - targz
-      - zip
-      type: string
     AuthTokenRequest:
       type: object
       properties:
@@ -2697,11 +2715,6 @@ components:
           type: integer
       required:
       - count
-    IncludeVersionEnum:
-      enum:
-      - only_original
-      - only_last
-      type: string
     Node:
       type: object
       additionalProperties: false
@@ -2769,27 +2782,6 @@ components:
       - Document
       - documents
       - folders
-    NodesDownload:
-      type: object
-      properties:
-        node_ids:
-          type: array
-          items:
-            type: string
-            format: uuid
-        file_name:
-          type: string
-          maxLength: 32
-        include_version:
-          allOf:
-          - $ref: '#/components/schemas/IncludeVersionEnum'
-          default: only_last
-        archive_type:
-          allOf:
-          - $ref: '#/components/schemas/ArchiveTypeEnum'
-          default: zip
-      required:
-      - node_ids
     Ocr:
       type: object
       properties:
