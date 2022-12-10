@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Papermerge REST API
-  version: 2.1.0b26
+  version: 2.1.0b27
   description: Document management system designed for digital archives
 paths:
   /api/auth/login/:
