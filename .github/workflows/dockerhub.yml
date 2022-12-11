@@ -1,4 +1,4 @@
-name: Build
+name: Dockerhub
 
 on:
   workflow_dispatch:
@@ -18,8 +18,8 @@ on:
         type: string
 
 jobs:
-  build-redoc:
-    name: Redoc/Build and Publish
+  redoc:
+    name: Redoc
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -48,8 +48,8 @@ jobs:
           short-description: >
             Redoc based geneatred REST API reference for Papermerge
 
-  build-swagger:
-    name: Swagger/Build and Publish
+  swagger:
+    name: Swagger
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

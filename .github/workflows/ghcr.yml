@@ -1,0 +1,55 @@
+name: Ghcr
+
+on:
+  workflow_dispatch:
+    inputs:
+      VERSION:
+        required: true
+        type: string
+  workflow_call:
+    secrets:
+      MY_GH_TOKEN:
+        required: true
+    inputs:
+      VERSION:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  ghcr:
+    name: ghcr.io
+    runs-on: ubuntu-latest
+    env:
+      swagger_ui_image: ghcr.io/papermerge/swagger-ui
+      redoc_image: ghcr.io/papermerge/redoc
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.MY_GH_TOKEN }}
+
+      - name: swagger-ui
+        uses: docker/build-push-action@v3
+        with:
+          push: true
+          tags: ${{ env.swagger_ui_image }}:latest,${{ env.swagger_ui_image }}:${{ inputs.VERSION }}
+          file: docker/Dockerfile.swagger
+
+      - name: redoc
+        uses: docker/build-push-action@v3
+        with:
+          push: true
+          tags: ${{ env.redoc_image }}:latest,${{ env.redoc_image }}:${{ inputs.VERSION }}
+          file: docker/Dockerfile.redoc
