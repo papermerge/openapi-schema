@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Papermerge REST API
-  version: 2.1.1
+  version: 2.1.2
   description: Document management system designed for digital archives
 paths:
   /api/auth/login/:
@@ -730,6 +730,29 @@ paths:
             application/vnd.api+json:
               schema:
                 $ref: '#/components/schemas/Data_Node'
+          description: ''
+        '400':
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        detail:
+                          type: string
+                        status:
+                          type: string
+                        code:
+                          type: string
+                        source:
+                          type: object
+                          properties:
+                            pointer:
+                              type: string
           description: ''
   /api/nodes/{id}/:
     get:
