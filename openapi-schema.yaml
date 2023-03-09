@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Papermerge REST API
-  version: 2.1.4
+  version: 2.1.7.dev3
   description: Document management system designed for digital archives
 paths:
   /api/auth/login/:
@@ -2545,6 +2545,9 @@ components:
               - succeeded
               - failed
               type: string
+            breadcrumb:
+              type: string
+              readOnly: true
             versions:
               type: array
               items:
@@ -2679,6 +2682,9 @@ components:
             title:
               type: string
               maxLength: 200
+            breadcrumb:
+              type: string
+              readOnly: true
             tags:
               type: array
               items:
@@ -3376,6 +3382,9 @@ components:
               - succeeded
               - failed
               type: string
+            breadcrumb:
+              type: string
+              readOnly: true
             versions:
               type: array
               items:
@@ -3416,6 +3425,9 @@ components:
             title:
               type: string
               maxLength: 200
+            breadcrumb:
+              type: string
+              readOnly: true
             tags:
               type: array
               items:
